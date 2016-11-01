@@ -1,0 +1,7 @@
+check process edgemicro
+  with pidfile /var/vcap/sys/run/edgemicro/pid
+  init program "/var/vcap/jobs/edgemicro/bin/ctl init"
+  configure program "/var/vcap/jobs/edgemicro/bin/ctl configure"
+  start program "/var/vcap/jobs/edgemicro/bin/ctl start"
+  stop program "/var/vcap/jobs/edgemicro/bin/ctl stop"
+  group vcap

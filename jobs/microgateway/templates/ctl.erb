@@ -1,0 +1,52 @@
+#!/bin/bash
+
+RUN_DIR=/var/vcap/sys/run/edgemicro
+LOG_DIR=/var/vcap/sys/log/edgemicro
+PIDFILE=${RUN_DIR}/pid
+
+mkdir -p $RUN_DIR $LOG_DIR
+chown -R vcap:vcap $RUN_DIR $LOG_DIR
+
+case $1 in
+
+  init)
+    cd /var/vcap/packages/edgemicro_app
+    exec edgemicro init > $LOG_DIR/init.txt
+
+  ;;
+
+  configure)
+    cd /var/vcap/packages/edgemicro_app
+    exec edgemicro configure -o <%= properties.edgemicro.org %> -e <%= properties.edgemicro.env %> -u <%= properties.edgemicro.username %> -p <%= properties.edgemicro.password %> > $LOG_DIR/edgemicro_configure.txt
+  ;;
+
+  start)
+    #mkdir -p $RUN_DIR $LOG_DIR
+    #chown -R vcap:vcap $RUN_DIR $LOG_DIR
+
+    echo $$ > $PIDFILE
+
+
+    cd /var/vcap/packages/edgemicro_app
+    grep key: /tmp/configure_output.txt | sed 's/key:\s//' | sed -e 's/^[ \t]*//' > $LOG_DIR/key.txt
+    grep secret: /tmp/configure_output.txt | sed 's/secret:\s//' | sed -e 's/^[ \t]*//' > $LOG_DIR/secret.txt
+    exec edgemicro start -o <%= properties.edgemicro.org %> -e <%= properties.edgemicro.env %> -k $(cat /tmp/key.txt) -s $(cat /tmp/secret.txt) -c -p <%= properties.edgemicro.cluster_processes %> --port <%= properties.edgemicro.port %> > $LOG_DIR/startup.txt
+
+    #export PATH=/var/vcap/packages/ruby_1.9.3/bin:$PATH
+    #exec /var/vcap/packages/ruby_1.9.3/bin/bundle exec \
+    #  rackup -p <%= properties.web_ui.port %> \
+    #  >>  $LOG_DIR/web_ui.stdout.log \
+    #  2>> $LOG_DIR/web_ui.stderr.log
+
+    ;;
+
+  stop)
+    kill -9 `cat $PIDFILE`
+    rm -f $PIDFILE
+
+    ;;
+
+  *)
+    echo "Usage: ctl {init|configure|start|stop}" ;;
+
+esac
