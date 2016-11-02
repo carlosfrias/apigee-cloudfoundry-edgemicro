@@ -2,4 +2,12 @@
 name: microgateway
 templates:
   ctl.erb: bin/ctl
+
 packages:
+- node_6.9.1
+- edgemicro_2.0.4
+
+properties:
+  edgemicro.port:
+    description: "Port on which edgemicro is listening"
+    default: 8000

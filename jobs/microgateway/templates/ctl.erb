@@ -7,6 +7,8 @@ PIDFILE=${RUN_DIR}/pid
 mkdir -p $RUN_DIR $LOG_DIR
 chown -R vcap:vcap $RUN_DIR $LOG_DIR
 
+export PATH=/var/vcap/packages/node_6.9.1/node/node-v6.9.1-linux-x64/bin:$PATH
+
 case $1 in
 
   init)
@@ -27,20 +29,24 @@ case $1 in
     echo $$ > $PIDFILE
 
 
-    cd /var/vcap/packages/edgemicro_app
+    #cd /var/vcap/packages/edgemicro_app
+    exec edgemicro init > $LOG_DIR/init.txt
+    exec edgemicro configure -o <%= properties.edgemicro.org %> -e <%= properties.edgemicro.env %> -u <%= properties.edgemicro.username %> -p <%= properties.edgemicro.password %> > $LOG_DIR/edgemicro_configure.txt
+
     grep key: /tmp/configure_output.txt | sed 's/key:\s//' | sed -e 's/^[ \t]*//' > $LOG_DIR/key.txt
     grep secret: /tmp/configure_output.txt | sed 's/secret:\s//' | sed -e 's/^[ \t]*//' > $LOG_DIR/secret.txt
     exec edgemicro start -o <%= properties.edgemicro.org %> -e <%= properties.edgemicro.env %> -k $(cat /tmp/key.txt) -s $(cat /tmp/secret.txt) -c -p <%= properties.edgemicro.cluster_processes %> --port <%= properties.edgemicro.port %> > $LOG_DIR/startup.txt
 
     #export PATH=/var/vcap/packages/ruby_1.9.3/bin:$PATH
     #exec /var/vcap/packages/ruby_1.9.3/bin/bundle exec \
-    #  rackup -p <%= properties.web_ui.port %> \
+    #  rackup -p <%= properties.edgemicro.port %> \
     #  >>  $LOG_DIR/web_ui.stdout.log \
     #  2>> $LOG_DIR/web_ui.stderr.log
 
     ;;
 
   stop)
+    exec edgemicro stop
     kill -9 `cat $PIDFILE`
     rm -f $PIDFILE
 

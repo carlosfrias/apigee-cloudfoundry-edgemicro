@@ -1,0 +1,6 @@
+.blobs
+.dev_builds
+.final_builds
+dev_releases/
+config/
+.DS_Store
